@@ -94,6 +94,7 @@ export async function run(): Promise<void> {
     const image = getInput('image'); // Image ie gcr.io/...
     const service = getInput('service'); // Service name
     const metadata = getInput('metadata'); // YAML file
+    const jobMetadata = getInput('job_metadata'); // YAML file
     const projectId = getInput('project_id');
     const gcloudVersion = await computeGcloudVersion(getInput('gcloud_version'));
     const gcloudComponent = presence(getInput('gcloud_component')); // Cloud SDK component version
@@ -156,6 +157,28 @@ export async function run(): Promise<void> {
       for (const key in providedButIgnored) {
         if (providedButIgnored[key]) {
           logWarning(`Updating traffic, ignoring "${key}" input`);
+        }
+      }
+    } else if (jobMetadata) {
+      cmd = ['run', 'jobs', 'replace', jobMetadata];
+
+      const providedButIgnored: Record<string, boolean> = {
+        image: image !== '',
+        service: service !== '',
+        source: source !== '',
+        env_vars: envVars !== '',
+        no_traffic: noTraffic,
+        secrets: Object.keys(secrets).length > 0,
+        suffix: suffix !== '',
+        tag: tag !== '',
+        revision_traffic: revTraffic !== '',
+        tag_traffic: revTraffic !== '',
+        labels: Object.keys(labels).length > 0,
+        timeout: timeout !== '',
+      };
+      for (const key in providedButIgnored) {
+        if (providedButIgnored[key]) {
+          logWarning(`Using job metadata YAML, ignoring "${key}" input`);
         }
       }
     } else if (metadata) {
